@@ -249,6 +249,31 @@ UniValue stop(const UniValue& params, bool fHelp)
     return "VITAE server stopping";
 }
 
+double GetPoSKernelPS() {
+    int nTargetSpacing = Params().TargetSpacing();
+    double dStakeKernelsTriedAvg = 0;
+    int nStakesHandled = 0, nStakesTime = 0;
+    CBlockIndex* pindex = pindexBestHeader;
+    CBlockIndex* pindexPrevStake = nullptr;
+    while (pindex && nStakesHandled < nTargetSpacing) {
+        if (pindex->IsProofOfStake()) {
+            if (pindexPrevStake) {
+                dStakeKernelsTriedAvg += GetDifficulty(pindexPrevStake) * 4294967296.0;
+                nStakesTime += pindexPrevStake->nTime - pindex->nTime;
+                nStakesHandled++;
+            }
+            pindexPrevStake = pindex;
+        }
+        pindex = pindex->pprev;
+    }
+    double result = 0;
+    if (nStakesTime)
+        result = dStakeKernelsTriedAvg / nStakesTime;
+    const int STAKE_TIMESTAMP_MASK = 15;
+    result *= STAKE_TIMESTAMP_MASK + 1;
+
+    return result;
+}
 
 /**
  * Call Table
@@ -377,6 +402,8 @@ static const CRPCCommand vRPCCommands[] =
         {"wallet", "getaccountaddress", &getaccountaddress, true, false, true},
         {"wallet", "getaccount", &getaccount, true, false, true},
         {"wallet", "getaddressesbyaccount", &getaddressesbyaccount, true, false, true},
+        {"wallet", "getalladdresses", &getalladdresses, true, false, true},
+        {"wallet", "manageaddressbook", &manageaddressbook, true, false, true},
         {"wallet", "getbalance", &getbalance, false, false, true},
         {"wallet", "getnewaddress", &getnewaddress, true, false, true},
         {"wallet", "getrawchangeaddress", &getrawchangeaddress, true, false, true},
@@ -386,6 +413,7 @@ static const CRPCCommand vRPCCommands[] =
         {"wallet", "getstakesplitthreshold", &getstakesplitthreshold, false, false, true},
         {"wallet", "gettransaction", &gettransaction, false, false, true},
         {"wallet", "getunconfirmedbalance", &getunconfirmedbalance, false, false, true},
+        {"wallet", "getimmaturebalance", &getimmaturebalance, false, false, true},
         {"wallet", "getwalletinfo", &getwalletinfo, false, false, true},
         {"wallet", "importprivkey", &importprivkey, true, false, true},
         {"wallet", "importwallet", &importwallet, true, false, true},

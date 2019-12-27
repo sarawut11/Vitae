@@ -20,15 +20,6 @@
 #include "mn-spork.h"
 //#include "activemasternode.h"
 
-#define MASTERNODE_NOT_PROCESSED               0 // initial state
-#define MASTERNODE_IS_CAPABLE                  1
-#define MASTERNODE_NOT_CAPABLE                 2
-#define MASTERNODE_STOPPED                     3
-#define MASTERNODE_INPUT_TOO_NEW               4
-#define MASTERNODE_PORT_NOT_OPEN               6
-#define MASTERNODE_PORT_OPEN                   7
-#define MASTERNODE_SYNC_IN_PROCESS             8
-#define MASTERNODE_REMOTELY_ENABLED            9
 
 #define MASTERNODE_MIN_CONFIRMATIONS           15
 #define MASTERNODE_MIN_DSEEP_SECONDS           (30*60)

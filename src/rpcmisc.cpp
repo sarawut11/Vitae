@@ -577,6 +577,18 @@ UniValue getstakingstatus(const UniValue& params, bool fHelp)
     }
     obj.push_back(Pair("fnsync", fundamentalnodeSync.IsSynced()));
 
+    uint64_t nWeight = 0;
+    if (pwalletMain)
+        nWeight = pwalletMain->GetStakeWeight();
+    uint64_t nNetworkWeight = GetPoSKernelPS();
+    int64_t nTargetSpacing = Params().TargetSpacing();
+    uint64_t nExpectedTime = nWeight != 0 ? (nTargetSpacing * nNetworkWeight / nWeight) : 0;
+    obj.push_back(Pair("weight", (uint64_t)nWeight));
+    obj.push_back(Pair("lastsearchtime", (uint64_t)nLastCoinStakeSearchTime));
+    obj.push_back(Pair("difficulty", GetDifficulty()));
+    obj.push_back(Pair("netstakeweight", (uint64_t)nNetworkWeight));
+    obj.push_back(Pair("expectedtime", nExpectedTime));
+
     bool nStaking = false;
     if (mapHashedBlocks.count(chainActive.Tip()->nHeight))
         nStaking = true;

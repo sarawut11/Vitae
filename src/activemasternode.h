@@ -22,6 +22,7 @@
 #define ACTIVE_MASTERNODE_INPUT_TOO_NEW 2
 #define ACTIVE_MASTERNODE_NOT_CAPABLE 3
 #define ACTIVE_MASTERNODE_STARTED 4
+#define ACTIVE_MASTERNODE_STOPPED 5
 
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
@@ -40,7 +41,7 @@ public:
 
     CActiveMasternode()
     {
-        status = MASTERNODE_NOT_PROCESSED;
+        status = ACTIVE_MASTERNODE_INITIAL;
     }
 
     /// Manage status of main Masternode

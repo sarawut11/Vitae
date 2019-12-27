@@ -127,10 +127,6 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   main.h \
   masternode.h \
-  masternode-sync.h \
-  masternode-payments.h \
-  masternode-budget.h \
-  masternodeman.h \
   masternode-pos.h \
   masternodeman.h \
   masternodeconfig.h \
