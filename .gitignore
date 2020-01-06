@@ -61,7 +61,7 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 contrib/devtools/split-debug.sh
-
+src/univalue/*
 src/leveldb/build_config.mk
 
 src/qt/*.moc
