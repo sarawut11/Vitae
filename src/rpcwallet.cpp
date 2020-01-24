@@ -291,6 +291,124 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 
+UniValue getalladdresses(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getalladdresses \n"
+            "\nReturns the list of all addresses\n");
+
+    // Find all addresses that have the given account
+    UniValue result(UniValue::VOBJ);
+
+    UniValue send(UniValue::VOBJ);
+    UniValue receive(UniValue::VOBJ);
+    BOOST_FOREACH (const PAIRTYPE(CBitcoinAddress, CAddressBookData) & item, pwalletMain->mapAddressBook) {
+        const CBitcoinAddress& address = item.first;
+        if(IsMine(*pwalletMain, address.Get()))
+            receive.pushKV(address.ToString(), item.second.name);
+        else
+            send.pushKV(address.ToString(), item.second.name);
+    }
+    result.pushKV("receive", receive);
+    result.pushKV("send", send);
+
+    return result;
+}
+
+UniValue manageaddressbook(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "manageaddressbook \"action\" \"address\" ( \"label\" \"purpose\" )\n"
+            "Manage the address book."
+            "\nArguments:\n"
+            "1. \"action\"      (string, required) 'add/edit/del' The action to take.\n"
+            "2. \"address\"     (string, required) The address to affect.\n"
+            "3. \"label\"       (string, optional) Optional label.\n"
+            "4. \"purpose\"     (string, optional) Optional purpose label.\n");
+
+    string sAction = params[0].get_str();
+    string sAddress = params[1].get_str();
+    string sLabel, sPurpose;
+
+    bool fHavePurpose = false;
+    if (params.size() > 2)
+        sLabel = params[2].get_str();
+    if (params.size() > 3)
+    {
+        sPurpose = params[3].get_str();
+        fHavePurpose = true;
+    };
+
+    CBitcoinAddress address(sAddress);
+
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid VITAE address");
+
+    CTxDestination dest = address.Get();
+
+    std::map<CTxDestination, CAddressBookData>::iterator mabi;
+    mabi = pwalletMain->mapAddressBook.find(dest);
+
+    UniValue objDestData(UniValue::VOBJ);
+
+    if (sAction == "add")
+    {
+        if (mabi != pwalletMain->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is recorded in the address book."), sAddress));
+
+        if (!pwalletMain->SetAddressBook(dest, sLabel, sPurpose))
+            throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
+    } else
+    if (sAction == "edit")
+    {
+        if (params.size() < 3)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, _("Need a parameter to change."));
+        if (mabi == pwalletMain->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
+
+        if (!pwalletMain->SetAddressBook(dest, sLabel,
+            fHavePurpose ? sPurpose : mabi->second.purpose))
+            throw JSONRPCError(RPC_WALLET_ERROR, "SetAddressBook failed.");
+
+        sLabel = mabi->second.name;
+        sPurpose = mabi->second.purpose;
+
+        for (const auto &pair : mabi->second.destdata)
+            objDestData.pushKV(pair.first, pair.second);
+
+    } else
+    if (sAction == "del")
+    {
+        if (mabi == pwalletMain->mapAddressBook.end())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf(_("Address '%s' is not in the address book."), sAddress));
+        sLabel = mabi->second.name;
+        sPurpose = mabi->second.purpose;
+
+        if (!pwalletMain->DelAddressBook(dest))
+            throw JSONRPCError(RPC_WALLET_ERROR, "DelAddressBook failed.");
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Unknown action, must be one of 'add/edit/del'."));
+    };
+
+    UniValue result(UniValue::VOBJ);
+
+    result.pushKV("action", sAction);
+    result.pushKV("address", sAddress);
+
+    if (sLabel.size() > 0)
+        result.pushKV("label", sLabel);
+    if (sPurpose.size() > 0)
+        result.pushKV("purpose", sPurpose);
+    if (objDestData.size() > 0)
+        result.pushKV("destdata", objDestData);
+
+    result.pushKV("result", "success");
+
+    return result;
+}
+
 void SendMoney(const CTxDestination& address, CAmount nValue, CWalletTx& wtxNew, bool fUseIX = false)
 {
     // Check amount
@@ -634,7 +752,7 @@ UniValue getbalance(const UniValue& params, bool fHelp)
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
-            "amount              (numeric) The total amount in btc received for this account.\n"
+            "amount              (numeric) The total amount in vitae received for this account.\n"
             "\nExamples:\n"
             "\nThe total amount in the server across all accounts\n" +
             HelpExampleCli("getbalance", "") +
@@ -696,6 +814,14 @@ UniValue getunconfirmedbalance(const UniValue &params, bool fHelp)
     return ValueFromAmount(pwalletMain->GetUnconfirmedBalance());
 }
 
+UniValue getimmaturebalance(const UniValue &params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "getimmaturebalance\n"
+            "Returns the server's total immature balance\n");
+    return ValueFromAmount(pwalletMain->GetImmatureBalance());
+}
 
 UniValue movecmd(const UniValue& params, bool fHelp)
 {

@@ -1052,7 +1052,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
+CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const bool fForStaking) const
 {
     if (pwallet == 0)
         return 0;
@@ -1069,14 +1069,30 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
     for (unsigned int i = 0; i < vout.size(); i++) {
         if (!pwallet->IsSpent(hashTx, i)) {
             const CTxOut& txout = vout[i];
-            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+            const CScript pscriptPubKey = txout.scriptPubKey;
+
+            //only check p2sh and bech32 balances for staking
+            if(fForStaking){
+                CTxDestination dest;
+                if (!ExtractDestination(pscriptPubKey, dest) || pscriptPubKey.IsPayToPublicKeyHash())
+                    continue;
+
+                nCredit += pwallet->GetCredit(txout, ISMINE_ALL);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error(std::string(__func__) + " : value out of range");
+
+            }
+            else{
+                nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+                if (!MoneyRange(nCredit))
+                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
+            }
         }
     }
 
     nAvailableCreditCached = nCredit;
-    fAvailableCreditCached = true;
+    if(!fForStaking)
+        fAvailableCreditCached = true;
     return nCredit;
 }
 
@@ -2864,6 +2880,58 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue, CWa
     } else{
 
     return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, useIX, nFeePay);}
+}
+
+CAmount CWallet::GetStakeableBalance() const
+{
+    CAmount nBalance = 0;
+
+    LOCK2(cs_main, cs_wallet);
+
+    for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        const CWalletTx* pcoin = &(*it).second;
+        if (!pcoin->IsTrusted())
+            continue;
+        nBalance += pcoin->GetAvailableCredit(true, true);
+    }
+
+    return nBalance;
+}
+
+uint64_t CWallet::GetStakeWeight() const
+{
+    // Choose coins to use
+    int64_t nBalance = GetStakeableBalance();
+
+    if (nBalance <= nReserveBalance)
+        return 0;
+
+    int nHeight;
+    {
+        LOCK(cs_main);
+        nHeight = chainActive.Height()+1;
+    }
+
+    // Choose coins to use
+    std::set<std::pair<const CWalletTx*,unsigned int> > setCoins;
+
+    // Select coins with suitable depth
+    if (!SelectStakeCoins(setCoins, nBalance - nReserveBalance))
+        return 0;
+
+    if (setCoins.empty())
+        return 0;
+
+    uint64_t nWeight = 0;
+
+    LOCK2(cs_main, cs_wallet);
+    for (auto pcoin : setCoins)
+    {
+        nWeight += pcoin.first->vout[pcoin.second].nValue;
+    }
+
+    return nWeight;
 }
 
 // ppcoin: create coin stake transaction

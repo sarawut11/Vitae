@@ -448,6 +448,7 @@ public:
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
     CAmount GetBalance() const;
+    CAmount GetStakeableBalance() const;
     CAmount GetZerocoinBalance(bool fMatureOnly) const;
     CAmount GetUnconfirmedZerocoinBalance() const;
     CAmount GetImmatureZerocoinBalance() const;
@@ -488,6 +489,8 @@ public:
     bool MultiSend();
     void AutoCombineDust();
     void AutoZeromint();
+
+    uint64_t GetStakeWeight() const;
 
     static CFeeRate minTxFee;
     static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool);
@@ -947,7 +950,7 @@ public:
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache = true) const;
-    CAmount GetAvailableCredit(bool fUseCache = true) const;
+    CAmount GetAvailableCredit(bool fUseCache = true, const bool fForStaking = false) const;
     CAmount GetAnonymizableCredit(bool fUseCache = true) const;
     CAmount GetAnonymizedCredit(bool fUseCache = true) const;
     // Return sum of unlocked coins

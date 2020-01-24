@@ -146,6 +146,7 @@ extern int64_t nWalletUnlockTime;
 extern CAmount AmountFromValue(const UniValue& value);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+double GetPoSKernelPS();
 extern std::string HelpRequiringPassphrase();
 extern std::string HelpExampleCli(std::string methodname, std::string args);
 extern std::string HelpExampleRpc(std::string methodname, std::string args);
@@ -188,6 +189,8 @@ extern UniValue getrawchangeaddress(const UniValue& params, bool fHelp);
 extern UniValue setaccount(const UniValue& params, bool fHelp);
 extern UniValue getaccount(const UniValue& params, bool fHelp);
 extern UniValue getaddressesbyaccount(const UniValue& params, bool fHelp);
+extern UniValue getalladdresses(const UniValue& params, bool fHelp);
+extern UniValue manageaddressbook(const UniValue& params, bool fHelp);
 extern UniValue sendtoaddress(const UniValue& params, bool fHelp);
 extern UniValue sendtoaddressix(const UniValue& params, bool fHelp);
 extern UniValue signmessage(const UniValue& params, bool fHelp);
@@ -195,6 +198,7 @@ extern UniValue getreceivedbyaddress(const UniValue& params, bool fHelp);
 extern UniValue getreceivedbyaccount(const UniValue& params, bool fHelp);
 extern UniValue getbalance(const UniValue& params, bool fHelp);
 extern UniValue getunconfirmedbalance(const UniValue& params, bool fHelp);
+extern UniValue getimmaturebalance(const UniValue& params, bool fHelp);
 extern UniValue movecmd(const UniValue& params, bool fHelp);
 extern UniValue sendfrom(const UniValue& params, bool fHelp);
 extern UniValue sendmany(const UniValue& params, bool fHelp);
@@ -278,6 +282,9 @@ extern UniValue listfundamentalnodeconf(const UniValue& params, bool fHelp);
 extern UniValue getfundamentalnodestatus(const UniValue& params, bool fHelp);
 extern UniValue getfundamentalnodewinners(const UniValue& params, bool fHelp);
 extern UniValue getfundamentalnodescores(const UniValue& params, bool fHelp);
+extern UniValue masternode(const UniValue& params, bool fHelp);
+extern UniValue masternodelist(const UniValue& params, bool fHelp);
+extern UniValue getmasternodestatus(const UniValue& params, bool fHelp);
 
 extern UniValue fnbudget(const UniValue& params, bool fHelp); // in rpcfundamentalnode-budget.cpp
 extern UniValue preparebudget(const UniValue& params, bool fHelp);
@@ -301,9 +308,6 @@ extern UniValue setmocktime(const UniValue& params, bool fHelp);
 extern UniValue getstakingstatus(const UniValue& params, bool fHelp);
 
 extern UniValue mnspork(const UniValue& params, bool fHelp);
-extern UniValue masternode(const UniValue& params, bool fHelp);
-extern UniValue masternodelist(const UniValue& params, bool fHelp);
-extern UniValue getmasternodestatus(const UniValue& params, bool fHelp);
 
 
 // in rest.cpp
