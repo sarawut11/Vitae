@@ -411,31 +411,27 @@ UniValue manageaddressbook(const UniValue& params, bool fHelp)
 
 UniValue getfeeforamount(const UniValue& params, bool fHelp)
 {
-    if (fHelp || request.params.size() != 2)
+    if (fHelp || params.size() != 2)
         throw runtime_error(
             "getfeeforamount \"amount\" \"address\"\n"
             "\n. Returns the fee needed for the amount needed to send.\n" +
             HelpRequiringPassphrase() +
             "\nArguments:\n"
-            "1. \"amount\"        (int, required) The amount you want for fee calculation.\n"
+            "1. \"amount\"        (numeric, required) The amount you want for fee calculation.\n"
             "2. \"address\"       (string, required) The address you want to send to for fee calculation.\n"
             "\nResult:\n"
             "\"fee\"                   (json string of fee)\n"
             "\nExamples:\n"
             + HelpExampleCli("getfeeforamount", "\"400\" \"ViUCcu9n1dDjCCUaYhJU7h8u5ERinB7wro\""));
 
-
-    // Amount
     CAmount nAmount = AmountFromValue(params[0]);
-
-    CBitcoinAddress address(params[0].get_str());
+    CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid VITAE address");
 
     CScript scriptPubKey = GetScriptForDestination(address.Get());
 
     CAmount curBalance = pwalletMain->GetBalance();
-
     if (nAmount <= 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
 
