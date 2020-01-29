@@ -414,6 +414,7 @@ static const CRPCCommand vRPCCommands[] =
         {"wallet", "gettransaction", &gettransaction, false, false, true},
         {"wallet", "getunconfirmedbalance", &getunconfirmedbalance, false, false, true},
         {"wallet", "getimmaturebalance", &getimmaturebalance, false, false, true},
+        {"wallet", "getfeeforamount", &getfeeforamount, false, false, true},
         {"wallet", "getwalletinfo", &getwalletinfo, false, false, true},
         {"wallet", "importprivkey", &importprivkey, true, false, true},
         {"wallet", "importwallet", &importwallet, true, false, true},

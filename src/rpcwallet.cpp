@@ -409,6 +409,53 @@ UniValue manageaddressbook(const UniValue& params, bool fHelp)
     return result;
 }
 
+UniValue getfeeforamount(const UniValue& params, bool fHelp)
+{
+    if (fHelp || request.params.size() != 2)
+        throw runtime_error(
+            "getfeeforamount \"amount\" \"address\"\n"
+            "\n. Returns the fee needed for the amount needed to send.\n" +
+            HelpRequiringPassphrase() +
+            "\nArguments:\n"
+            "1. \"amount\"        (int, required) The amount you want for fee calculation.\n"
+            "2. \"address\"       (string, required) The address you want to send to for fee calculation.\n"
+            "\nResult:\n"
+            "\"fee\"                   (json string of fee)\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getfeeforamount", "\"400\" \"ViUCcu9n1dDjCCUaYhJU7h8u5ERinB7wro\""));
+
+
+    // Amount
+    CAmount nAmount = AmountFromValue(params[0]);
+
+    CBitcoinAddress address(params[0].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid VITAE address");
+
+    CScript scriptPubKey = GetScriptForDestination(address.Get());
+
+    CAmount curBalance = pwalletMain->GetBalance();
+
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+
+    if (nAmount > curBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    CAmount nFeeRequired;
+    string strError;
+    CWalletTx wtxNew;
+    CReserveKey reservekey(pwalletMain);
+    EnsureWalletIsUnlocked();
+    if (!pwalletMain->CreateTransaction(scriptPubKey, nAmount, wtxNew, reservekey, nFeeRequired, strError, NULL, ALL_COINS, false, (CAmount)0)) {
+        if (nAmount + nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+
+    return ValueFromAmount(nFeeRequired);
+}
+
 void SendMoney(const CTxDestination& address, CAmount nValue, CWalletTx& wtxNew, bool fUseIX = false)
 {
     // Check amount
