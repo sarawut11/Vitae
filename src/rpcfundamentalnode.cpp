@@ -771,7 +771,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         //Object resultObj;
-        UniValue resultObj(UniValue::VOBJ);
+        UniValue resultObj(UniValue::VARR);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             //Object mnObj;
@@ -783,7 +783,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
             mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
             mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));
             mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
-            resultObj.push_back(Pair("masternode", mnObj));
+            resultObj.push_back(mnObj);
         }
 
         return resultObj;
